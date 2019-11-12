@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="logo192.png" />
-    <!--
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Web site created using create-react-app" />
+  <link rel="apple-touch-icon" href="favicon.ico" />
+  <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
       Only files inside the `public` folder can be referenced from the HTML.
@@ -24,20 +22,173 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+  <title>RoadMage</title>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+  <link rel="stylesheet" href="https://bootswatch.com/4/pulse/bootstrap.min.css">
+</head>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+<body>
+  <div class="container-fluid text-center">
+    <div class="row content">
+      <div class="col-lg-12">
+        <img src="logo_small.jpg" class="img-fluid">
+        <h1 class="text-primary font-weight-bold">RoadMage</h1>
+        <h3>RoadMage is a service that is designed to take the rage out of the road.</h3>
+        <p class="text-secondary font-italic">By taking the survey upon sign-up, you have created your driving style. Your driving style is used
+            when providing data to you about possible routes you could take to your destination.</p>
+        <hr>
+        <div id="mapstuff">
+          <div class="form-group row">
+            <div class="col-md-6">
+              <b>Start: </b>
+              <input class="form-control" id="start" type="text" value="Enter Starting Location">
+            </div>
+            <div class="col-md-6">
+              <b>End: </b>
+              <input class="form-control" id="end" type="text" value="Enter Destination">
+            </div>
+            <p>&nbsp;</p>
+            <div class="col-md-12">
+              <button type="button" class="btn btn-primary btn-lg" onClick="geo();">Go</button>
+            </div>
+          </div>
+          <div id="googleMap" style="width:100%;height:700px;"></div>
+        </div>
+        <script>
+          var directionsService;
+          var directionsRenderer;
+          var service;
+          var infowindow;
+          var map;
+          var geocoder;
+          var startlat;
+          var startlong;
+          function initMap() {
+            directionsService = new google.maps.DirectionsService();
+            directionsDisplay = new google.maps.DirectionsRenderer();
+            
+            map = new google.maps.Map(document.getElementById('googleMap'), {
+              center: { lat: 37.063706, lng: -76.493837 },
+              zoom: 15
+            });
+            directionsDisplay.setMap(map);
+
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(function (position) {
+                pos = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+                };
+                startlat = position.coords.latitude;
+                startlong = position.coords.longitude;
+                var location_combo = position.coords.latitude + "," + position.coords.longitude;
+                document.getElementById('start').value = location_combo;
+                map.setCenter(pos);
+              });
+            }
+
+            geocoder = new google.maps.Geocoder();
+
+            //directionsRenderer.setMap(map);
+
+            // Displays current traffic
+
+            var trafficLayer = new google.maps.TrafficLayer();
+            trafficLayer.setMap(map);
+          }
+
+          function createMarker(place) {
+            var marker = new google.maps.Marker({
+              map: map,
+              position: place.geometry.location
+            });
+
+            google.maps.event.addListener(marker, 'click', function () {
+              infowindow.setContent(place.name);
+              infowindow.open(map, this);
+            });
+          }
+
+          
+
+          function getAllRoutes(result) {
+            console.log(result.routes.length);
+
+            directionsRenderer1 = new google.maps.DirectionsRenderer({
+              routeIndex: 0,
+              map: map,
+              polylineOptions: {
+                strokeWeight: 6,
+                strokeOpacity: 0.8,
+                strokeColor: "red",
+              }
+            });
+            directionsRenderer1.setDirections(result);
+
+            directionsRenderer2 = new google.maps.DirectionsRenderer({
+              routeIndex: 1,
+              map: map,
+              polylineOptions: {
+                strokeWeight: 5,
+                strokeOpacity: 0.8,
+                strokeColor: "blue"
+              }
+            });
+            directionsRenderer2.setDirections(result);
+
+            directionsRenderer3 = new google.maps.DirectionsRenderer({
+              routeIndex: 2,
+              map: map,
+              polylineOptions: {
+                strokeWeight: 4,
+                strokeOpacity: 0.8,
+                strokeColor: "yellow",
+              }
+            });
+            directionsRenderer3.setDirections(result);
+          }
+
+          function calcRoute(endlat, endlong) {
+            directionsService.route({
+              origin: { lat: startlat, lng: startlong },
+              destination: { lat: endlat, lng: endlong },
+              travelMode: google.maps.DirectionsTravelMode.DRIVING,
+              provideRouteAlternatives: true
+            }, function (response, status) {
+              if (status == 'OK') {
+                getAllRoutes(response);
+              } else {
+                window.alert('Directions request failed due to ' + status);
+              }
+            });
+          }
+
+          function geo() {
+            var endpoint = document.getElementById('end').value;
+            var endlat;
+            var endlong;
+
+            geocoder.geocode({'address': endpoint}, function(results, status) {
+              if (status == 'OK') {
+                endlat = results[0].geometry.location.lat();
+                endlong = results[0].geometry.location.lng();
+                calcRoute(endlat, endlong);
+              } else {
+                alert('Geocode was not successful for the following reason: ' + status);
+              }
+            });
+          }
+        </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbOeg9rXJVJGRRpcUfbbbuwXDcpbSgMlU&libraries=places&callback=initMap"> async defer</script>
+      </div>
+    </div>
+  </div>
+
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+  <footer class="container-fluid text-center fixed-bottom">
+    <p>Created by Alec Souders, Christopher Newport University Class of 2020</p>
+  </footer>
+</body>
 </html>
+
