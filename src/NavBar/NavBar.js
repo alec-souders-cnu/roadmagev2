@@ -21,7 +21,7 @@ function NavBar(props) {
       {
         auth0Client.isAuthenticated() &&
         <div>
-          <label className="mr-2 text-secondary">{auth0Client.getProfile().name}</label>
+          <label className="mr-2 text-secondary" id="userdisplay">{auth0Client.getProfile().name}</label>
           <Link to="/">
           <button className="btn btn-primary navbar-btn" >Home</button>
           </Link>
